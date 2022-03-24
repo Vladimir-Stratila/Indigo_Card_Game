@@ -1,7 +1,7 @@
 package indigo
 
 object CardDeck {
-    private val cards = mutableListOf<Card>()
+    val cards = mutableListOf<Card>()
     init {
         reset()
         shuffle()
@@ -14,7 +14,6 @@ object CardDeck {
             }
         }
     }
-
     private fun shuffle() {
         cards.shuffle()
     }

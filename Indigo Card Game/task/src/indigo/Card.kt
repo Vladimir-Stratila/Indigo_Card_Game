@@ -25,4 +25,17 @@ data class Card(private val cardRank: Ranks, private val cardSuit: Suits) {
     override fun toString(): String {
         return "${cardRank.rank}${cardSuit.suit}"
     }
+    fun isAlike(card: Card): Boolean {
+        return (card.cardRank == this.cardRank || card.cardSuit == this.cardSuit)
+    }
+    fun getPoint(): Int {
+        return when (cardRank.rank) {
+            "A" -> 1
+            "10" -> 1
+            "J" -> 1
+            "Q" -> 1
+            "K" -> 1
+            else -> 0
+        }
+    }
 }

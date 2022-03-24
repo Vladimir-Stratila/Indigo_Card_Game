@@ -2,18 +2,21 @@ package indigo
 
 open class Player() {
     val hand = mutableListOf<Card>()
+    val archive = mutableListOf<Card>()
+    var points: Int = 0
     var isGameOver: Boolean = false
     open fun giveCard(): Card? {
         val card = hand[0]
         hand.removeAt(0)
         return card
     }
-    fun showCards() {
-        print("Cards in hand:")
-        for (i in hand.indices) {
-            print(" ${i+1})${hand[i]}")
+    open fun showCards() {}
+    fun countPoints() {
+        var result = 0
+        for (c in archive) {
+            result += c.getPoint()
         }
-        print("\n")
+        points = result
     }
 }
 
@@ -35,7 +38,13 @@ class HumanPlayer() : Player() {
             hand.removeAt(input.toInt() - 1)
             card
         } else null
-
+    }
+    override fun showCards() {
+        print("Cards in hand:")
+        for (i in hand.indices) {
+            print(" ${i+1})${hand[i]}")
+        }
+        print("\n")
     }
     private fun isNumber(s: String): Boolean {
         return try {
