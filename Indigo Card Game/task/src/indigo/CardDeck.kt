@@ -3,6 +3,11 @@ package indigo
 object CardDeck {
     private val cards = mutableListOf<Card>()
     init {
+        reset()
+        shuffle()
+    }
+    private fun reset() {
+        cards.clear()
         for (s in Card.Suits.values()){
             for (r in Card.Ranks.values()) {
                 cards.add(Card(r, s))
@@ -10,18 +15,8 @@ object CardDeck {
         }
     }
 
-    fun reset() {
-        cards.clear()
-        for (s in Card.Suits.values()){
-            for (r in Card.Ranks.values()) {
-                cards.add(Card(r, s))
-            }
-        }
-        println("Card deck is reset.")
-    }
-    fun shuffle() {
+    private fun shuffle() {
         cards.shuffle()
-        println("Card deck is shuffled.")
     }
     fun get() {
         println("Number of cards: ")
@@ -42,5 +37,14 @@ object CardDeck {
         } catch (e: NumberFormatException) {
             println("Invalid number of cards.")
         }
+    }
+    fun get(number: Int): List<Card> {
+        val deal = cards.take(number)
+        val cardsIterator = cards.iterator()
+        for (i in 1..number) {
+            cardsIterator.next()
+            cardsIterator.remove()
+        }
+        return deal
     }
 }
