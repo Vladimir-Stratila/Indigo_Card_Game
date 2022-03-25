@@ -616,6 +616,246 @@ files:
 
 
   learner_created: false
+- name: src/indigo/Player.kt
+  visible: true
+  text: |-
+    package indigo
+
+    open class Player() {
+        val hand = mutableListOf<Card>()
+        val archive = mutableListOf<Card>()
+        var points: Int = 0
+        var isGameOver: Boolean = false
+        open fun giveCard(): Card? {
+            val card = hand[0]
+            hand.removeAt(0)
+            return card
+        }
+        open fun showCards() {}
+        fun countPoints() {
+            var result = 0
+            for (c in archive) {
+                result += c.getPoint()
+            }
+            points = result
+        }
+    }
+
+    class ComputerPlayer() : Player() {
+        override fun giveCard(): Card? {
+            val card = super.giveCard()
+            println("Computer plays $card")
+            return card
+        }
+    }
+
+    class HumanPlayer() : Player() {
+        override fun giveCard(): Card? {
+            println("Choose a card to play (1-${hand.size}):")
+            val input = readln()
+            if (input == "exit") isGameOver = true
+            return if (isNumber(input) && input.toInt() in (1..hand.size)) {
+                val card = hand[input.toInt() - 1]
+                hand.removeAt(input.toInt() - 1)
+                card
+            } else null
+        }
+        override fun showCards() {
+            print("Cards in hand:")
+            for (i in hand.indices) {
+                print(" ${i+1})${hand[i]}")
+            }
+            print("\n")
+        }
+        private fun isNumber(s: String): Boolean {
+            return try {
+                s.toInt()
+                true
+            } catch (ex: NumberFormatException) {
+                false
+            }
+        }
+    }
+  learner_created: true
+- name: src/indigo/Card.kt
+  visible: true
+  text: |-
+    package indigo
+
+    data class Card(private val cardRank: Ranks, private val cardSuit: Suits) {
+        enum class Ranks(val rank: String) {
+            ACE("A"),
+            TWO("2"),
+            THREE("3"),
+            FOUR("4"),
+            FIVE("5"),
+            SIX("6"),
+            SEVEN("7"),
+            EIGHT("8"),
+            NINE("9"),
+            TEN("10"),
+            JACK("J"),
+            QUEEN("Q"),
+            KING("K"),
+        }
+        enum class Suits(val suit: Char) {
+            DIAMONDS('♦'),
+            HEART('♥'),
+            SPADES('♠'),
+            CLUBS('♣')
+        }
+        override fun toString(): String {
+            return "${cardRank.rank}${cardSuit.suit}"
+        }
+        fun isAlike(card: Card): Boolean {
+            return (card.cardRank == this.cardRank || card.cardSuit == this.cardSuit)
+        }
+        fun getPoint(): Int {
+            return when (cardRank.rank) {
+                "A" -> 1
+                "10" -> 1
+                "J" -> 1
+                "Q" -> 1
+                "K" -> 1
+                else -> 0
+            }
+        }
+    }
+  learner_created: true
+- name: src/indigo/CardDeck.kt
+  visible: true
+  text: |-
+    package indigo
+
+    object CardDeck {
+        val cards = mutableListOf<Card>()
+        init {
+            reset()
+            shuffle()
+        }
+        private fun reset() {
+            cards.clear()
+            for (s in Card.Suits.values()){
+                for (r in Card.Ranks.values()) {
+                    cards.add(Card(r, s))
+                }
+            }
+        }
+        private fun shuffle() {
+            cards.shuffle()
+        }
+        fun get() {
+            println("Number of cards: ")
+            try {
+                val number = readln().toInt()
+                if (number !in 1..52) {
+                    println("Invalid number of cards.")
+                } else if (number > cards.size) {
+                    println("The remaining cards are insufficient to meet the request.")
+                } else {
+                    println(cards.take(number).joinToString(" "))
+                    val cardsIterator = cards.iterator()
+                    for (i in 1..number) {
+                        cardsIterator.next()
+                        cardsIterator.remove()
+                    }
+                }
+            } catch (e: NumberFormatException) {
+                println("Invalid number of cards.")
+            }
+        }
+        fun get(number: Int): List<Card> {
+            val deal = cards.take(number)
+            val cardsIterator = cards.iterator()
+            for (i in 1..number) {
+                cardsIterator.next()
+                cardsIterator.remove()
+            }
+            return deal
+        }
+    }
+  learner_created: true
+- name: src/indigo/Table.kt
+  visible: true
+  text: |-
+    package indigo
+
+    object Table {
+        private val humanPlayer = HumanPlayer()
+        private val computerPlayer = ComputerPlayer()
+        lateinit var firstPlayer: Player
+        lateinit var currentPlayer: Player
+        lateinit var takenRemaining: Player
+        val pile = mutableListOf<Card>()
+        val deck = CardDeck
+        var cardCount = 0
+
+        fun whoIsFirst() {
+            var action: String
+            do {
+                println("Play first?")
+                action = readln().lowercase()
+                when(action) {
+                    "yes" -> {
+                        firstPlayer = humanPlayer
+                        currentPlayer = humanPlayer
+                        takenRemaining = humanPlayer
+                    }
+                    "no" -> {
+                        firstPlayer = computerPlayer
+                        currentPlayer = computerPlayer
+                        takenRemaining = computerPlayer
+                    }
+                }
+            } while (!(action == "yes" || action == "no"))
+        }
+        fun firstDeal() {
+            pile.addAll(deck.get(4))
+            cardCount += 4
+            println("Initial cards on the table: ${pile.joinToString(" ")}")
+        }
+        fun show() {
+            if (pile.size > 0)
+                println("\n${pile.size} cards on the table, and the top card is ${pile[pile.size - 1]}")
+            else
+                println("\nNo cards on the table")
+        }
+        fun changePlayer() {
+            currentPlayer = if (currentPlayer == humanPlayer) computerPlayer else humanPlayer
+        }
+        fun dealCards(number: Int) {
+            currentPlayer.hand.addAll(deck.get(number))
+        }
+        fun checkCard() {
+            if (pile.size > 1 && pile[pile.size - 1].isAlike(pile[pile.size - 2])) {
+                currentPlayer.archive.addAll(pile)
+                pile.clear()
+                takenRemaining = currentPlayer
+                when(currentPlayer) {
+                    humanPlayer -> println("Player wins cards")
+                    computerPlayer -> println("Computer wins cards")
+                }
+                currentPlayer.countPoints()
+                showScore()
+            }
+        }
+        private fun showScore() {
+            println("Score: Player ${humanPlayer.points} - Computer ${computerPlayer.points}")
+            println("Cards: Player ${humanPlayer.archive.size} - Computer ${computerPlayer.archive.size}")
+        }
+        fun showFinalScore() {
+            humanPlayer.countPoints()
+            computerPlayer.countPoints()
+            if (humanPlayer.archive.size > computerPlayer.archive.size) humanPlayer.points += 3 else computerPlayer.points += 3
+            if (humanPlayer.archive.size == computerPlayer.archive.size) firstPlayer.points += 3
+            showScore()
+        }
+    }
+  learner_created: true
 feedback_link: https://hyperskill.org/learn/step/16512#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">JetBrains
+    Academy</a> to continue learning.
+  time: Fri, 25 Mar 2022 17:42:50 UTC
 record: -1

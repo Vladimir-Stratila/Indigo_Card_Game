@@ -1,6 +1,6 @@
 package indigo
 
-data class Card(private val cardRank: Ranks, private val cardSuit: Suits) {
+data class Card(val cardRank: Ranks, val cardSuit: Suits) {
     enum class Ranks(val rank: String) {
         ACE("A"),
         TWO("2"),

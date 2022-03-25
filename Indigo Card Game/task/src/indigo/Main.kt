@@ -8,11 +8,12 @@ fun main() {
     do {
         table.show()
         var playingCard: Card?
+        var topCard =  if (table.pile.isNotEmpty()) table.pile.last() else null
         if (table.currentPlayer.hand.size == 0 && table.deck.cards.size > 0) table.dealCards(6)
         if (table.currentPlayer.hand.size > 0) {
             table.currentPlayer.showCards()
             do {
-                playingCard = table.currentPlayer.giveCard()
+                playingCard = table.currentPlayer.giveCard(topCard)
                 if (table.currentPlayer.isGameOver) break
             } while (playingCard == null)
             if (playingCard != null) {
